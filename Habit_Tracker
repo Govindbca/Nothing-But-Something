@@ -1,1 +1,183 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.ArrayList;
 
+class Habit {
+    String name;
+    boolean[] completionStatus;
+
+    public Habit(String name, int days) {
+        this.name = name;
+        this.completionStatus = new boolean[days];
+    }
+
+    public void markComplete(int day) {
+        if (day >= 1 && day <= completionStatus.length) {
+            completionStatus[day - 1] = true;
+        }
+    }
+
+    public String getStatus() {
+        StringBuilder status = new StringBuilder("Habit: " + name + "\n");
+        for (int i = 0; i < completionStatus.length; i++) {
+            String dayStatus = completionStatus[i] ? "Completed" : "Pending";
+            status.append("Day " + (i + 1) + ": " + dayStatus + "\n");
+        }
+        return status.toString();
+    }
+}
+
+public class HabitTrackerGUI {
+
+    private static ArrayList<Habit> habits = new ArrayList<>();
+    private static int daysToTrack;
+    private static JTextArea displayArea;
+
+    public static void main(String[] args) {
+        // Setup the main window (JFrame)
+        JFrame frame = new JFrame("Habit Tracker");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(400, 400);
+        frame.setLayout(new FlowLayout());
+
+        // Set up components
+        JLabel daysLabel = new JLabel("Enter the number of days to track:");
+        JTextField daysInput = new JTextField(5);
+        JButton setDaysButton = new JButton("Set Days");
+        JButton addHabitButton = new JButton("Add Habit");
+        JButton markCompleteButton = new JButton("Mark Complete");
+        JButton showStatusButton = new JButton("Show Status");
+        JButton editHabitButton = new JButton("Edit Habit");
+        JButton deleteHabitButton = new JButton("Delete Habit");
+        displayArea = new JTextArea(10, 30);
+        displayArea.setEditable(false);
+        JScrollPane scrollPane = new JScrollPane(displayArea);
+
+        // Add components to the frame
+        frame.add(daysLabel);
+        frame.add(daysInput);
+        frame.add(setDaysButton);
+        frame.add(addHabitButton);
+        frame.add(markCompleteButton);
+        frame.add(showStatusButton);
+        frame.add(editHabitButton);
+        frame.add(deleteHabitButton);
+        frame.add(scrollPane);
+
+        // Action listeners for buttons
+        setDaysButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    daysToTrack = Integer.parseInt(daysInput.getText());
+                    displayArea.append("Tracking habits for " + daysToTrack + " days.\n");
+                    daysInput.setEditable(false);
+                    setDaysButton.setEnabled(false);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(frame, "Please enter a valid number of days.");
+                }
+            }
+        });
+
+        addHabitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String habitName = JOptionPane.showInputDialog(frame, "Enter the habit name:");
+                if (habitName != null && !habitName.trim().isEmpty()) {
+                    habits.add(new Habit(habitName, daysToTrack));
+                    displayArea.append("Habit '" + habitName + "' added successfully!\n");
+                }
+            }
+        });
+
+        markCompleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String habitName = JOptionPane.showInputDialog(frame, "Enter the habit name to mark complete:");
+                boolean found = false;
+                for (Habit habit : habits) {
+                    if (habit.name.equalsIgnoreCase(habitName)) {
+                        String dayInput = JOptionPane.showInputDialog(frame, "Enter the day number to mark as complete:");
+                        try {
+                            int day = Integer.parseInt(dayInput);
+                            if (day >= 1 && day <= daysToTrack) {
+                                habit.markComplete(day);
+                                displayArea.append("Marked " + habitName + " as complete on day " + day + ".\n");
+                            } else {
+                                JOptionPane.showMessageDialog(frame, "Invalid day number.");
+                            }
+                        } catch (NumberFormatException ex) {
+                            JOptionPane.showMessageDialog(frame, "Please enter a valid day number.");
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    JOptionPane.showMessageDialog(frame, "Habit not found.");
+                }
+            }
+        });
+
+        showStatusButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (habits.isEmpty()) {
+                    displayArea.append("No habits added yet.\n");
+                } else {
+                    for (Habit habit : habits) {
+                        displayArea.append(habit.getStatus());
+                    }
+                }
+            }
+        });
+
+        // Edit Habit Button
+        editHabitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String habitName = JOptionPane.showInputDialog(frame, "Enter the habit name to edit:");
+                boolean found = false;
+                for (Habit habit : habits) {
+                    if (habit.name.equalsIgnoreCase(habitName)) {
+                        String newName = JOptionPane.showInputDialog(frame, "Enter the new habit name:");
+                        if (newName != null && !newName.trim().isEmpty()) {
+                            habit.name = newName;
+                            displayArea.append("Habit name updated to: " + newName + "\n");
+                        }
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    JOptionPane.showMessageDialog(frame, "Habit not found.");
+                }
+            }
+        });
+
+        // Delete Habit Button
+        deleteHabitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String habitName = JOptionPane.showInputDialog(frame, "Enter the habit name to delete:");
+                boolean found = false;
+                for (int i = 0; i < habits.size(); i++) {
+                    if (habits.get(i).name.equalsIgnoreCase(habitName)) {
+                        habits.remove(i);
+                        displayArea.append("Habit '" + habitName + "' deleted successfully.\n");
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found) {
+                    JOptionPane.showMessageDialog(frame, "Habit not found.");
+                }
+            }
+        });
+
+        // Make the frame visible
+        frame.setVisible(true);
+    }
+}
